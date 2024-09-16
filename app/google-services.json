@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "953095194575",
+    "project_id": "software-ventas-cbb55",
+    "storage_bucket": "software-ventas-cbb55.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:953095194575:android:c07f05a21aed09c36fb4ba",
+        "android_client_info": {
+          "package_name": "com.example.softwareventas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUDA7E4SUMtaD2qHRH4njUcnz18IsSQhM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
