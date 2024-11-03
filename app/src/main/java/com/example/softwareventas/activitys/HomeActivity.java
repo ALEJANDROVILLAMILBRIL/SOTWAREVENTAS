@@ -15,6 +15,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 
 import com.example.softwareventas.R;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -22,11 +23,15 @@ public class HomeActivity extends AppCompatActivity {
     private NavigationView navigationView;
     private BottomNavigationView bottomNavigationView;
     private Toolbar toolbar;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        // Inicializar FirebaseAuth
+        mAuth = FirebaseAuth.getInstance();
 
         // Inicializar vistas
         drawerLayout = findViewById(R.id.drawer_layout);
@@ -77,10 +82,13 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void handleLogout() {
+        // Cerrar sesión en Firebase Auth
+        mAuth.signOut();
+
         // Redirigir al LoginActivity
         Intent intent = new Intent(HomeActivity.this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
-        finish(); // Terminar la actividad actual
+        finish();
     }
 }

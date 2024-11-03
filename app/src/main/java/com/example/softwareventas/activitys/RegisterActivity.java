@@ -10,6 +10,8 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.example.softwareventas.models.User;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -17,6 +19,7 @@ import com.example.softwareventas.R;
 
 public class RegisterActivity extends AppCompatActivity {
 
+    private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
 
     private EditText usernameEditText, passwordEditText, emailEditText, addressEditText, phoneEditText, birthdateEditText;
@@ -27,6 +30,7 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
+        mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
         // Vincular las vistas con el diseño XML
@@ -60,33 +64,30 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        String safeEmail = email.replace(".", ",");
-
-        // Crear un nuevo usuario
-        User user = new User(username, password, email, address, phone, birthdate);
-
-        // Guardar el usuario en Firebase Realtime Database
-        mDatabase.child("users").child(safeEmail).get().addOnCompleteListener(task -> {
+        // Crear usuario en Firebase Authentication
+        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this, task -> {
             if (task.isSuccessful()) {
-                if (task.getResult().exists()) {
-                    // El usuario ya existe
-                    Toast.makeText(RegisterActivity.this, "Este usuario ya está registrado.", Toast.LENGTH_SHORT).show();
-                } else {
-                    // El usuario no existe, lo creamos
-                    mDatabase.child("users").child(safeEmail).setValue(user).addOnCompleteListener(task1 -> {
+                // Registro exitoso, obtenemos el usuario actual
+                FirebaseUser firebaseUser = mAuth.getCurrentUser();
+                if (firebaseUser != null) {
+                    String userId = firebaseUser.getUid();
+
+                    // Crear un nuevo usuario con información adicional en Realtime Database
+                    User user = new User(username, email, address, phone, birthdate);
+                    mDatabase.child("users").child(userId).setValue(user).addOnCompleteListener(task1 -> {
                         if (task1.isSuccessful()) {
                             Toast.makeText(RegisterActivity.this, "Usuario registrado con éxito.", Toast.LENGTH_SHORT).show();
                             // Redirigir a HomeActivity
                             Intent intent = new Intent(RegisterActivity.this, HomeActivity.class);
                             startActivity(intent);
-                            finish(); // Opcional: cerrar RegisterActivity para que no se pueda volver a esta actividad con el botón de retroceso
+                            finish();
                         } else {
-                            Toast.makeText(RegisterActivity.this, "Error al registrar el usuario.", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(RegisterActivity.this, "Error al guardar datos de usuario.", Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
             } else {
-                Toast.makeText(RegisterActivity.this, "Error al registrar el usuario.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(RegisterActivity.this, "Error al registrar el usuario: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

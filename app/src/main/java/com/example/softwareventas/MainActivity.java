@@ -11,6 +11,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.softwareventas.activitys.HomeActivity;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.DataSnapshot;
@@ -21,7 +23,7 @@ import com.example.softwareventas.activitys.RegisterActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    private DatabaseReference mDatabase;
+    private FirebaseAuth mAuth;
 
     // Declarar las vistas
     private EditText emailEditText, passwordEditText;
@@ -33,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mDatabase = FirebaseDatabase.getInstance().getReference();
+        mAuth = FirebaseAuth.getInstance();
 
         // Vincular las vistas con el diseño XML
         emailEditText = findViewById(R.id.emailEditText);
@@ -51,6 +53,19 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Verificar si el usuario ya ha iniciado sesión
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            // Si el usuario ya está autenticado, redirigir a HomeActivity
+            Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+            startActivity(intent);
+            finish();
+        }
+    }
+
     private void loginUser() {
         // Obtener los datos de los campos
         String email = emailEditText.getText().toString().trim();
@@ -62,32 +77,18 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Convertir el correo a una clave única (reemplazar caracteres no válidos)
-        String safeEmail = email.replace(".", ",");
-
-        // Verificar las credenciales en Firebase Realtime Database
-        mDatabase.child("users").child(safeEmail).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    // El usuario existe, verificar la contraseña
-                    String storedPassword = dataSnapshot.child("password").getValue(String.class);
-                    if (storedPassword != null && storedPassword.equals(password)) {
-                        // Contraseña correcta, redirigir a HomeActivity
-                        Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-                        startActivity(intent);
-                        finish(); // Opcional: cerrar MainActivity para que no se pueda volver a esta actividad con el botón de retroceso
-                    } else {
-                        Toast.makeText(MainActivity.this, "Correo o contraseña incorrectos.", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(MainActivity.this, "Usuario no encontrado.", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(MainActivity.this, "Error de base de datos.", Toast.LENGTH_SHORT).show();
+        // Autenticar al usuario con Firebase Auth
+        mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this, task -> {
+            if (task.isSuccessful()) {
+                // Inicio de sesión exitoso
+                Toast.makeText(MainActivity.this, "Inicio de sesión exitoso.", Toast.LENGTH_SHORT).show();
+                // Redirigir a HomeActivity
+                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                startActivity(intent);
+                finish();
+            } else {
+                // Error de inicio de sesión
+                Toast.makeText(MainActivity.this, "Error al iniciar sesión: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
