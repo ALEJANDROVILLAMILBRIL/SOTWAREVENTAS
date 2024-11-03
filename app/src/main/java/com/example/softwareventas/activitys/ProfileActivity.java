@@ -2,6 +2,9 @@ package com.example.softwareventas.activitys;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -38,6 +41,9 @@ public class ProfileActivity extends AppCompatActivity {
     private DatabaseReference userRef;
     private String userRole;
 
+    private EditText usernameEditText, emailEditText, addressEditText, phoneEditText, birthdateEditText;
+    private Button updateProfileButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +63,13 @@ public class ProfileActivity extends AppCompatActivity {
         navigationView = findViewById(R.id.nav_view_profile);
         bottomNavigationView = findViewById(R.id.bottom_nav_profile);
         toolbar = findViewById(R.id.toolbar_profile);
+
+        usernameEditText = findViewById(R.id.usernameEditText);
+        emailEditText = findViewById(R.id.emailEditText);
+        addressEditText = findViewById(R.id.addressEditText);
+        phoneEditText = findViewById(R.id.phoneEditText);
+        birthdateEditText = findViewById(R.id.birthdateEditText);
+        updateProfileButton = findViewById(R.id.updateProfileButton);
 
         // Configurar Toolbar
         setSupportActionBar(toolbar);
@@ -96,6 +109,58 @@ public class ProfileActivity extends AppCompatActivity {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Toast.makeText(ProfileActivity.this, "Error al cargar el rol del usuario", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Rellenar campos con los datos actuales del usuario
+        loadUserProfile();
+
+        // Botón de actualización de perfil
+        updateProfileButton.setOnClickListener(v -> updateUserProfile());
+    }
+
+    private void loadUserProfile() {
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                User user = snapshot.getValue(User.class);
+                if (user != null) {
+                    usernameEditText.setText(user.getUsername());
+                    emailEditText.setText(user.getEmail());
+                    addressEditText.setText(user.getAddress());
+                    phoneEditText.setText(user.getPhone());
+                    birthdateEditText.setText(user.getBirthdate());
+
+                    // Campos no editables
+                    usernameEditText.setEnabled(false);
+                    emailEditText.setEnabled(false);
+                    birthdateEditText.setEnabled(false);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(ProfileActivity.this, "Error al cargar los datos del perfil", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void updateUserProfile() {
+        String address = addressEditText.getText().toString().trim();
+        String phone = phoneEditText.getText().toString().trim();
+
+        if (TextUtils.isEmpty(address) || TextUtils.isEmpty(phone)) {
+            Toast.makeText(this, "Por favor, completa todos los campos", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Actualizar los datos del usuario en Firebase
+        userRef.child("address").setValue(address);
+        userRef.child("phone").setValue(phone).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Toast.makeText(ProfileActivity.this, "Perfil actualizado correctamente", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(ProfileActivity.this, "Error al actualizar el perfil", Toast.LENGTH_SHORT).show();
             }
         });
     }
