@@ -1,7 +1,6 @@
 package com.example.softwareventas.activitys;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -11,13 +10,12 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import com.example.softwareventas.MainActivity;
+import com.example.softwareventas.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
-
-import com.example.softwareventas.R;
 import com.google.firebase.auth.FirebaseAuth;
 
-public class HomeActivity extends AppCompatActivity {
+public class ProductActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
@@ -28,16 +26,16 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home);
+        setContentView(R.layout.activity_product);
 
         // Inicializar FirebaseAuth
         mAuth = FirebaseAuth.getInstance();
 
         // Inicializar vistas
-        drawerLayout = findViewById(R.id.drawer_layout);
-        navigationView = findViewById(R.id.nav_view);
-        bottomNavigationView = findViewById(R.id.bottom_nav);
-        toolbar = findViewById(R.id.toolbar);
+        drawerLayout = findViewById(R.id.drawer_layout_product);
+        navigationView = findViewById(R.id.nav_view_product);
+        bottomNavigationView = findViewById(R.id.bottom_nav_product);
+        toolbar = findViewById(R.id.toolbar_product);
 
         // Configurar Toolbar
         setSupportActionBar(toolbar);
@@ -47,14 +45,15 @@ public class HomeActivity extends AppCompatActivity {
         // Configurar NavigationView
         navigationView.setNavigationItemSelectedListener(item -> {
             if (item.getItemId() == R.id.nav_home) {
-                // Manejar la navegación a Home
-                Toast.makeText(HomeActivity.this, "Home", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(ProductActivity.this, HomeActivity.class);
+                startActivity(intent);
+                finish();
             } else if (item.getItemId() == R.id.nav_profile) {
                 // Manejar la navegación a Profile
-                Toast.makeText(HomeActivity.this, "Profile", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ProductActivity.this, "Profile", Toast.LENGTH_SHORT).show();
             } else if (item.getItemId() == R.id.nav_settings) {
                 // Manejar la navegación a Settings
-                Toast.makeText(HomeActivity.this, "Settings", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ProductActivity.this, "Settings", Toast.LENGTH_SHORT).show();
             } else if (item.getItemId() == R.id.nav_logout) {
                 handleLogout();
             }
@@ -62,24 +61,25 @@ public class HomeActivity extends AppCompatActivity {
             return true;
         });
 
-        bottomNavigationView.setSelectedItemId(R.id.nav_home);
+        bottomNavigationView.setSelectedItemId(R.id.nav_product);
 
         // Configurar BottomNavigationView
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
             if (item.getItemId() == R.id.nav_home) {
-                // Manejar la navegación a Home
-                Toast.makeText(HomeActivity.this, "Home", Toast.LENGTH_SHORT).show();
+                // Navegar a HomeActivity
+                Intent intent = new Intent(ProductActivity.this, HomeActivity.class);
+                startActivity(intent);
             } else if (item.getItemId() == R.id.nav_product) {
                 // Navegar a ProductActivity
-                Intent intent = new Intent(HomeActivity.this, ProductActivity.class);
+                Intent intent = new Intent(ProductActivity.this, ProductActivity.class);
                 startActivity(intent);
             } else if (item.getItemId() == R.id.nav_category) {
                 // Navegar a CategoryActivity
-                Intent intent = new Intent(HomeActivity.this, CategoryActivity.class);
+                Intent intent = new Intent(ProductActivity.this, CategoryActivity.class);
                 startActivity(intent);
             } else if (item.getItemId() == R.id.nav_profile) {
                 // Manejar la navegación a Profile
-                Toast.makeText(HomeActivity.this, "Profile", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ProductActivity.this, "Profile", Toast.LENGTH_SHORT).show();
             }
             return true;
         });
@@ -90,7 +90,7 @@ public class HomeActivity extends AppCompatActivity {
         mAuth.signOut();
 
         // Redirigir al LoginActivity
-        Intent intent = new Intent(HomeActivity.this, MainActivity.class);
+        Intent intent = new Intent(ProductActivity.this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();

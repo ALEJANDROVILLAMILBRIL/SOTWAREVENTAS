@@ -13,6 +13,12 @@
         android:theme="@style/Theme.SoftwareVentas"
         tools:targetApi="31">
         <activity
+            android:name=".activitys.CategoryActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activitys.ProductActivity"
+            android:exported="false" />
+        <activity
             android:name=".activitys.HomeActivity"
             android:exported="false" />
         <activity
