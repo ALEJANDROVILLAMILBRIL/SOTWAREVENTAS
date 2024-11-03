@@ -2,19 +2,20 @@ package com.example.softwareventas.models;
 
 public class User
 {
-    public String username, email, address, phone, birthdate;
+    public String username, email, address, phone, birthdate, role;
 
     public User()
     {
 
     }
 
-    public User(String username, String email, String address, String phone, String birthdate) {
+    public User(String username, String email, String address, String phone, String birthdate, String role) {
         this.username = username;
         this.email = email;
         this.address = address;
         this.phone = phone;
         this.birthdate = birthdate;
+        this.role = role;
     }
 
     public String getUsername() {
@@ -55,5 +56,13 @@ public class User
 
     public void setBirthdate(String birthdate) {
         this.birthdate = birthdate;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

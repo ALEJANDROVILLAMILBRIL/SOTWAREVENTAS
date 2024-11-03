@@ -73,7 +73,7 @@ public class RegisterActivity extends AppCompatActivity {
                     String userId = firebaseUser.getUid();
 
                     // Crear un nuevo usuario con información adicional en Realtime Database
-                    User user = new User(username, email, address, phone, birthdate);
+                    User user = new User(username, email, address, phone, birthdate, "USUARIO");
                     mDatabase.child("users").child(userId).setValue(user).addOnCompleteListener(task1 -> {
                         if (task1.isSuccessful()) {
                             Toast.makeText(RegisterActivity.this, "Usuario registrado con éxito.", Toast.LENGTH_SHORT).show();

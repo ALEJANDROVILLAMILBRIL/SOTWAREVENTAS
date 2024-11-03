@@ -76,9 +76,6 @@ public class CategoryActivity extends AppCompatActivity {
             } else if (item.getItemId() == R.id.nav_profile) {
                 // Manejar la navegación a Profile
                 Toast.makeText(CategoryActivity.this, "Profile", Toast.LENGTH_SHORT).show();
-            } else if (item.getItemId() == R.id.nav_settings) {
-                // Manejar la navegación a Settings
-                Toast.makeText(CategoryActivity.this, "Settings", Toast.LENGTH_SHORT).show();
             } else if (item.getItemId() == R.id.nav_logout) {
                 handleLogout();
             }

@@ -1,21 +1,36 @@
 package com.example.softwareventas.activitys;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 
 import com.example.softwareventas.MainActivity;
+import com.example.softwareventas.adapters.ProductAdapter;
+import com.example.softwareventas.models.Product;
+import com.example.softwareventas.models.User;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 
 import com.example.softwareventas.R;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -24,6 +39,12 @@ public class HomeActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
     private Toolbar toolbar;
     private FirebaseAuth mAuth;
+    private DatabaseReference userRef;
+    private String userRole;
+    private RecyclerView productRecyclerView;
+    private ProductAdapter productAdapter;
+    private List<Product> productList;
+    private DatabaseReference productRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,12 +53,22 @@ public class HomeActivity extends AppCompatActivity {
 
         // Inicializar FirebaseAuth
         mAuth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
+            redirectToLogin();
+            return;
+        }
+        userRef = FirebaseDatabase.getInstance().getReference("users").child(currentUser.getUid());
+        productRef = FirebaseDatabase.getInstance().getReference("products");
 
         // Inicializar vistas
         drawerLayout = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.nav_view);
         bottomNavigationView = findViewById(R.id.bottom_nav);
         toolbar = findViewById(R.id.toolbar);
+        productRecyclerView = findViewById(R.id.productRecyclerViewHome);
+
+        bottomNavigationView.setSelectedItemId(R.id.nav_home);
 
         // Configurar Toolbar
         setSupportActionBar(toolbar);
@@ -52,9 +83,6 @@ public class HomeActivity extends AppCompatActivity {
             } else if (item.getItemId() == R.id.nav_profile) {
                 // Manejar la navegación a Profile
                 Toast.makeText(HomeActivity.this, "Profile", Toast.LENGTH_SHORT).show();
-            } else if (item.getItemId() == R.id.nav_settings) {
-                // Manejar la navegación a Settings
-                Toast.makeText(HomeActivity.this, "Settings", Toast.LENGTH_SHORT).show();
             } else if (item.getItemId() == R.id.nav_logout) {
                 handleLogout();
             }
@@ -64,32 +92,91 @@ public class HomeActivity extends AppCompatActivity {
 
         bottomNavigationView.setSelectedItemId(R.id.nav_home);
 
-        // Configurar BottomNavigationView
+        productList = new ArrayList<>();
+        productRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                User user = snapshot.getValue(User.class);
+                if (user != null) {
+                    userRole = user.getRole();
+                    configureNavigationMenu(userRole);
+                    adjustMenuOptions(userRole);
+
+                    boolean isUser = "USUARIO".equals(userRole);
+                    productAdapter = new ProductAdapter(productList, isUser);
+                    productRecyclerView.setAdapter(productAdapter);
+
+                    if (isUser) {
+                        loadActiveProducts();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(HomeActivity.this, "Error al cargar el rol del usuario", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void configureNavigationMenu(String role) {
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
             if (item.getItemId() == R.id.nav_home) {
-                // Manejar la navegación a Home
                 Toast.makeText(HomeActivity.this, "Home", Toast.LENGTH_SHORT).show();
-            } else if (item.getItemId() == R.id.nav_product) {
-                // Navegar a ProductActivity
-                Intent intent = new Intent(HomeActivity.this, ProductActivity.class);
-                startActivity(intent);
-            } else if (item.getItemId() == R.id.nav_category) {
-                // Navegar a CategoryActivity
-                Intent intent = new Intent(HomeActivity.this, CategoryActivity.class);
-                startActivity(intent);
+            } else if ("ADMIN".equals(role) && item.getItemId() == R.id.nav_product) {
+                startActivity(new Intent(HomeActivity.this, ProductActivity.class));
+            } else if ("ADMIN".equals(role) && item.getItemId() == R.id.nav_category) {
+                startActivity(new Intent(HomeActivity.this, CategoryActivity.class));
             } else if (item.getItemId() == R.id.nav_profile) {
-                // Manejar la navegación a Profile
                 Toast.makeText(HomeActivity.this, "Profile", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(HomeActivity.this, "No tienes acceso a esta opción", Toast.LENGTH_SHORT).show();
+                return false;
             }
             return true;
         });
     }
 
+    private void loadActiveProducts() {
+        productRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                productList.clear();
+                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                    Product product = dataSnapshot.getValue(Product.class);
+                    if (product != null && product.isActive()) {
+                        productList.add(product);
+                    }
+                }
+                productAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(HomeActivity.this, "Error al cargar productos", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void adjustMenuOptions(String role) {
+        if (!"ADMIN".equals(role)) {
+            // Remover las opciones de admin si el rol no es ADMIN
+            bottomNavigationView.getMenu().removeItem(R.id.nav_product);
+            bottomNavigationView.getMenu().removeItem(R.id.nav_category);
+            navigationView.getMenu().removeItem(R.id.nav_product);
+            navigationView.getMenu().removeItem(R.id.nav_category);
+        }
+    }
+
     private void handleLogout() {
         // Cerrar sesión en Firebase Auth
         mAuth.signOut();
+        redirectToLogin();
+    }
 
-        // Redirigir al LoginActivity
+    private void redirectToLogin() {
         Intent intent = new Intent(HomeActivity.this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);

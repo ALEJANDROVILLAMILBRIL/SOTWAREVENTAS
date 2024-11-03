@@ -95,9 +95,6 @@ public class ProductActivity extends AppCompatActivity {
             } else if (item.getItemId() == R.id.nav_profile) {
                 // Manejar la navegación a Profile
                 Toast.makeText(ProductActivity.this, "Profile", Toast.LENGTH_SHORT).show();
-            } else if (item.getItemId() == R.id.nav_settings) {
-                // Manejar la navegación a Settings
-                Toast.makeText(ProductActivity.this, "Settings", Toast.LENGTH_SHORT).show();
             } else if (item.getItemId() == R.id.nav_logout) {
                 handleLogout();
             }
@@ -129,7 +126,7 @@ public class ProductActivity extends AppCompatActivity {
         });
 
         productList = new ArrayList<>();
-        productAdapter = new ProductAdapter(productList);
+        productAdapter = new ProductAdapter(productList, false);
         productRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         productRecyclerView.setAdapter(productAdapter);
 
