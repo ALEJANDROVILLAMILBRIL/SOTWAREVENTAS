@@ -1,5 +1,7 @@
 package com.example.softwareventas.models;
 
+import java.util.Objects;
+
 public class Category {
     private String id;
     private String name;
@@ -8,7 +10,6 @@ public class Category {
     private long updatedAt;
 
     public Category() {
-        // Constructor vacío necesario para Firebase
     }
 
     public Category(String id, String name, boolean isActive, long createdAt, long updatedAt) {
@@ -58,5 +59,24 @@ public class Category {
 
     public void setUpdatedAt(long updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    // Sobreescribe toString para mostrar el nombre en el Spinner
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Category category = (Category) o;
+        return Objects.equals(id, category.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
