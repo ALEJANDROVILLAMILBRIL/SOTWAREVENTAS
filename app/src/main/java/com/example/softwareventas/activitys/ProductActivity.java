@@ -42,7 +42,6 @@ public class ProductActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private FirebaseAuth mAuth;
 
-
     // UI Elements
     private Spinner categorySpinner;
     private EditText productNameEditText, productPriceEditText, productStockEditText, productDiscountEditText;
@@ -93,8 +92,9 @@ public class ProductActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
             } else if (item.getItemId() == R.id.nav_profile) {
-                // Manejar la navegación a Profile
-                Toast.makeText(ProductActivity.this, "Profile", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(ProductActivity.this, ProfileActivity.class);
+                startActivity(intent);
+                finish();
             } else if (item.getItemId() == R.id.nav_logout) {
                 handleLogout();
             }
@@ -119,8 +119,9 @@ public class ProductActivity extends AppCompatActivity {
                 Intent intent = new Intent(ProductActivity.this, CategoryActivity.class);
                 startActivity(intent);
             } else if (item.getItemId() == R.id.nav_profile) {
-                // Manejar la navegación a Profile
-                Toast.makeText(ProductActivity.this, "Profile", Toast.LENGTH_SHORT).show();
+                // Navegar a Profile
+                Intent intent = new Intent(ProductActivity.this, ProfileActivity.class);
+                startActivity(intent);
             }
             return true;
         });
@@ -220,7 +221,6 @@ public class ProductActivity extends AppCompatActivity {
             }
         });
     }
-
 
     private void handleLogout() {
         // Cerrar sesión en Firebase Auth

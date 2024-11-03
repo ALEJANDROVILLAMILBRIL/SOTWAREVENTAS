@@ -75,7 +75,9 @@ public class CategoryActivity extends AppCompatActivity {
                 finish();
             } else if (item.getItemId() == R.id.nav_profile) {
                 // Manejar la navegación a Profile
-                Toast.makeText(CategoryActivity.this, "Profile", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(CategoryActivity.this, ProfileActivity.class);
+                startActivity(intent);
+                finish();
             } else if (item.getItemId() == R.id.nav_logout) {
                 handleLogout();
             }
@@ -100,8 +102,9 @@ public class CategoryActivity extends AppCompatActivity {
                 Intent intent = new Intent(CategoryActivity.this, CategoryActivity.class);
                 startActivity(intent);
             } else if (item.getItemId() == R.id.nav_profile) {
-                // Manejar la navegación a Profile
-                Toast.makeText(CategoryActivity.this, "Profile", Toast.LENGTH_SHORT).show();
+                // Navegar a Profile
+                Intent intent = new Intent(CategoryActivity.this, ProfileActivity.class);
+                startActivity(intent);
             }
             return true;
         });
