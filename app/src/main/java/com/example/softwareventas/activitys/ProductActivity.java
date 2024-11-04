@@ -22,9 +22,11 @@ import com.example.softwareventas.R;
 import com.example.softwareventas.adapters.ProductAdapter;
 import com.example.softwareventas.models.Category;
 import com.example.softwareventas.models.Product;
+import com.example.softwareventas.models.User;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -40,7 +42,10 @@ public class ProductActivity extends AppCompatActivity {
     private NavigationView navigationView;
     private BottomNavigationView bottomNavigationView;
     private Toolbar toolbar;
+
     private FirebaseAuth mAuth;
+    private DatabaseReference userRef;
+    private String userRole;
 
     // UI Elements
     private Spinner categorySpinner;
@@ -62,6 +67,12 @@ public class ProductActivity extends AppCompatActivity {
 
         // Inicializar FirebaseAuth
         mAuth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
+            handleLogout();
+            return;
+        }
+        userRef = FirebaseDatabase.getInstance().getReference("users").child(currentUser.getUid());
         categoryRef = FirebaseDatabase.getInstance().getReference("categories");
         productRef = FirebaseDatabase.getInstance().getReference("products");
 
@@ -104,26 +115,21 @@ public class ProductActivity extends AppCompatActivity {
 
         bottomNavigationView.setSelectedItemId(R.id.nav_product);
 
-        // Configurar BottomNavigationView
-        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
-            if (item.getItemId() == R.id.nav_home) {
-                // Navegar a HomeActivity
-                Intent intent = new Intent(ProductActivity.this, HomeActivity.class);
-                startActivity(intent);
-            } else if (item.getItemId() == R.id.nav_product) {
-                // Navegar a ProductActivity
-                Intent intent = new Intent(ProductActivity.this, ProductActivity.class);
-                startActivity(intent);
-            } else if (item.getItemId() == R.id.nav_category) {
-                // Navegar a CategoryActivity
-                Intent intent = new Intent(ProductActivity.this, CategoryActivity.class);
-                startActivity(intent);
-            } else if (item.getItemId() == R.id.nav_profile) {
-                // Navegar a Profile
-                Intent intent = new Intent(ProductActivity.this, ProfileActivity.class);
-                startActivity(intent);
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                User user = snapshot.getValue(User.class);
+                if (user != null) {
+                    userRole = user.getRole();
+                    configureNavigationMenu(userRole);
+                    adjustMenuOptions(userRole);
+                }
             }
-            return true;
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(ProductActivity.this, "Error al cargar el rol del usuario", Toast.LENGTH_SHORT).show();
+            }
         });
 
         productList = new ArrayList<>();
@@ -220,6 +226,39 @@ public class ProductActivity extends AppCompatActivity {
                 Toast.makeText(this, "Error al agregar el producto", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void configureNavigationMenu(String role) {
+        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
+            if (item.getItemId() == R.id.nav_home) {
+                startActivity(new Intent(ProductActivity.this, HomeActivity.class));
+            } else if ("ADMIN".equals(role) && item.getItemId() == R.id.nav_product) {
+                startActivity(new Intent(ProductActivity.this, ProductActivity.class));
+            } else if ("ADMIN".equals(role) && item.getItemId() == R.id.nav_category) {
+                startActivity(new Intent(ProductActivity.this, CategoryActivity.class));
+            } else if ("USUARIO".equals(role) && item.getItemId() == R.id.nav_cart) {
+                startActivity(new Intent(ProductActivity.this, CartActivity.class));
+            } else if (item.getItemId() == R.id.nav_profile) {
+                startActivity(new Intent(ProductActivity.this, ProfileActivity.class));
+            } else {
+                Toast.makeText(ProductActivity.this, "No tienes acceso a esta opción", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+            return true;
+        });
+    }
+
+    private void adjustMenuOptions(String role) {
+        if (!"ADMIN".equals(role)) {
+            // Remover las opciones de admin si el rol no es ADMIN
+            bottomNavigationView.getMenu().removeItem(R.id.nav_product);
+            bottomNavigationView.getMenu().removeItem(R.id.nav_category);
+            navigationView.getMenu().removeItem(R.id.nav_product);
+            navigationView.getMenu().removeItem(R.id.nav_category);
+        }else{
+            bottomNavigationView.getMenu().removeItem(R.id.nav_cart);
+            navigationView.getMenu().removeItem(R.id.nav_cart);
+        }
     }
 
     private void handleLogout() {

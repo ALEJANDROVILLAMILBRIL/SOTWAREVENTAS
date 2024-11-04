@@ -184,6 +184,8 @@ public class ProfileActivity extends AppCompatActivity {
                 startActivity(new Intent(ProfileActivity.this, ProductActivity.class));
             } else if ("ADMIN".equals(role) && item.getItemId() == R.id.nav_category) {
                 startActivity(new Intent(ProfileActivity.this, CategoryActivity.class));
+            } else if ("USUARIO".equals(role) && item.getItemId() == R.id.nav_cart) {
+                startActivity(new Intent(ProfileActivity.this, CartActivity.class));
             } else if (item.getItemId() == R.id.nav_profile) {
                 startActivity(new Intent(ProfileActivity.this, ProfileActivity.class));
             } else {
@@ -201,6 +203,9 @@ public class ProfileActivity extends AppCompatActivity {
             bottomNavigationView.getMenu().removeItem(R.id.nav_category);
             navigationView.getMenu().removeItem(R.id.nav_product);
             navigationView.getMenu().removeItem(R.id.nav_category);
+        }else{
+            bottomNavigationView.getMenu().removeItem(R.id.nav_cart);
+            navigationView.getMenu().removeItem(R.id.nav_cart);
         }
     }
 }

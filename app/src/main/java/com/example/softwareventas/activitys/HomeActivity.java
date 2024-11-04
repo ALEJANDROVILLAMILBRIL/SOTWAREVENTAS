@@ -132,6 +132,8 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(new Intent(HomeActivity.this, CategoryActivity.class));
             } else if (item.getItemId() == R.id.nav_profile) {
                 startActivity(new Intent(HomeActivity.this, ProfileActivity.class));
+            } else if ("USUARIO".equals(role) && item.getItemId() == R.id.nav_cart) {
+                startActivity(new Intent(HomeActivity.this, CartActivity.class));
             } else {
                 Toast.makeText(HomeActivity.this, "No tienes acceso a esta opción", Toast.LENGTH_SHORT).show();
                 return false;
@@ -168,6 +170,9 @@ public class HomeActivity extends AppCompatActivity {
             bottomNavigationView.getMenu().removeItem(R.id.nav_category);
             navigationView.getMenu().removeItem(R.id.nav_product);
             navigationView.getMenu().removeItem(R.id.nav_category);
+        }else{
+            bottomNavigationView.getMenu().removeItem(R.id.nav_cart);
+            navigationView.getMenu().removeItem(R.id.nav_cart);
         }
     }
 
