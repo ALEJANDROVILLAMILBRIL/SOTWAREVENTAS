@@ -10,11 +10,12 @@ public class Cart
     private double price;
     private int quantity;
     private long purchaseDate;
+    private boolean processPurchase;
 
     public Cart() {
     }
 
-    public Cart(String id, String productId, String productName, String categoryId, String userId, double price, int quantity, long purchaseDate) {
+    public Cart(String id, String productId, String productName, String categoryId, String userId, double price, int quantity, long purchaseDate, boolean processPurchase) {
         this.id = id;
         this.productId = productId;
         this.productName = productName;
@@ -23,6 +24,7 @@ public class Cart
         this.price = price;
         this.quantity = quantity;
         this.purchaseDate = purchaseDate;
+        this.processPurchase = processPurchase;
     }
 
     public String getId() {
@@ -87,5 +89,13 @@ public class Cart
 
     public void setPurchaseDate(long purchaseDate) {
         this.purchaseDate = purchaseDate;
+    }
+
+    public boolean isProcessPurchase() {
+        return processPurchase;
+    }
+
+    public void setProcessPurchase(boolean processPurchase) {
+        this.processPurchase = processPurchase;
     }
 }

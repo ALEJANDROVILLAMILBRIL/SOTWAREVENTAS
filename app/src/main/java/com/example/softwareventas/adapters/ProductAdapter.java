@@ -84,7 +84,8 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                     currentUserId,
                     product.getPrice(),
                     1,
-                    System.currentTimeMillis()
+                    System.currentTimeMillis(),
+                    true
             );
 
             // Guardar el cartItem en la referencia `carts` en Firebase
