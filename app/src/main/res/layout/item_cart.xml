@@ -12,7 +12,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:gravity="center_vertical">
 
         <!-- Icono del carrito -->
         <ImageView
@@ -56,6 +57,47 @@
                 android:textSize="16sp"
                 android:textColor="@color/black"
                 android:layout_marginTop="4dp"/>
+
+            <!-- Precio Total -->
+            <TextView
+                android:id="@+id/productTotalPriceTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Precio Total: $5000"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+
+        <!-- Botones de eliminar -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <!-- Botón de eliminar uno -->
+            <ImageButton
+                android:id="@+id/buttonDeleteOne"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_cartquantity"
+                android:contentDescription="Eliminar uno"
+                android:padding="8dp"
+                android:layout_marginEnd="4dp"
+                app:tint="@color/gray" />
+
+            <!-- Botón de eliminar todo -->
+            <ImageButton
+                android:id="@+id/buttonDeleteAll"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_delete"
+                android:contentDescription="Eliminar todo"
+                android:padding="8dp"
+                app:tint="@color/gray" />
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>
