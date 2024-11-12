@@ -27,6 +27,14 @@ public class Cart
         this.processPurchase = processPurchase;
     }
 
+    public Cart(String productId, String productName, int quantity, double price, boolean processPurchase) {
+        this.productId = productId;
+        this.productName = productName;
+        this.quantity = quantity;
+        this.price = price;
+        this.processPurchase = processPurchase;
+    }
+
     public String getId() {
         return id;
     }

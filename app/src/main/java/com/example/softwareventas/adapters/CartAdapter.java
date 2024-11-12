@@ -14,13 +14,20 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.softwareventas.R;
 import com.example.softwareventas.models.Cart;
+import com.example.softwareventas.utils.InvoiceGenerator;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CartAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -31,12 +38,14 @@ public class CartAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static Context context;
     private static DatabaseReference cartsRef;
     private static DatabaseReference productsRef;
+    private FirebaseAuth mAuth;
 
     public CartAdapter(List<Cart> cartList, Context context) {
         this.cartList = cartList;
         this.context = context;
         this.cartsRef = FirebaseDatabase.getInstance().getReference("carts");
         this.productsRef = FirebaseDatabase.getInstance().getReference("products");
+        this.mAuth = FirebaseAuth.getInstance();
     }
 
     @Override
@@ -72,16 +81,70 @@ public class CartAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     private void processOrder() {
+        // Consolidar productos con processPurchase: true en un solo mapa
+        Map<String, Cart> consolidatedItems = new HashMap<>();
         for (Cart cart : cartList) {
-            cart.setProcessPurchase(false);
-            cartsRef.child(cart.getId()).child("processPurchase").setValue(false);
+            if (cart.isProcessPurchase()) {
+                if (consolidatedItems.containsKey(cart.getProductId())) {
+                    // Si el producto ya está en el mapa, sumamos la cantidad
+                    Cart existingCart = consolidatedItems.get(cart.getProductId());
+                    existingCart.setQuantity(existingCart.getQuantity() + cart.getQuantity());
+                } else {
+                    // Si el producto no está en el mapa, lo añadimos con la cantidad inicial
+                    Cart consolidatedCart = new Cart(cart.getProductId(), cart.getProductName(), cart.getQuantity(), cart.getPrice(), true);
+                    consolidatedItems.put(cart.getProductId(), consolidatedCart);
+                }
+            }
         }
-        Toast.makeText(context, "Pedido realizado con éxito", Toast.LENGTH_SHORT).show();
-        notifyDataSetChanged();
+
+        // Convertir el mapa consolidado a una lista para generar la factura
+        List<Cart> itemsToInvoice = new ArrayList<>(consolidatedItems.values());
+
+        // Generar la factura y eliminar los elementos del carrito en Firebase
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            String userEmail = currentUser.getEmail();
+            String userName = currentUser.getDisplayName() != null ? currentUser.getDisplayName() : "Cliente";
+            String userId = currentUser.getUid(); // Obtener el ID del usuario actual
+
+            // Generar la factura en PDF solo para los elementos consolidados
+            File invoiceFile = InvoiceGenerator.generateInvoice(context, itemsToInvoice, userName, userEmail);
+            Toast.makeText(context, "Pedido realizado con éxito. Factura generada.", Toast.LENGTH_SHORT).show();
+
+            // Eliminar todos los elementos con `processPurchase: true` y que pertenezcan al usuario actual en Firebase
+            cartsRef.orderByChild("userId").equalTo(userId)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            for (DataSnapshot itemSnapshot : snapshot.getChildren()) {
+                                Cart item = itemSnapshot.getValue(Cart.class);
+                                // Verificar que el elemento tiene processPurchase: true antes de eliminar
+                                if (item != null && item.isProcessPurchase()) {
+                                    itemSnapshot.getRef().removeValue(); // Elimina solo los elementos del usuario actual con processPurchase: true
+                                }
+                            }
+
+                            // Eliminar los elementos procesados del carrito local
+                            cartList.removeIf(cart -> cart.isProcessPurchase() && cart.getUserId().equals(userId));
+                            notifyDataSetChanged(); // Actualizar la vista del carrito
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            Toast.makeText(context, "Error al procesar el pedido.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        } else {
+            Toast.makeText(context, "Error: Usuario no autenticado.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private static void deleteCartItem(Cart cart) {
-        // Eliminar un solo elemento y restablecer el stock
+        // Eliminar un solo elemento y restablecer el stock solo si processPurchase es true
+        if (!cart.isProcessPurchase()) {
+            return;
+        }
+
         int quantityToRestore = 1;
         cartsRef.orderByChild("productId").equalTo(cart.getProductId())
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -90,7 +153,7 @@ public class CartAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         boolean deletedOne = false;
                         for (DataSnapshot itemSnapshot : snapshot.getChildren()) {
                             Cart item = itemSnapshot.getValue(Cart.class);
-                            if (item != null && item.getUserId().equals(cart.getUserId()) && item.getCategoryId().equals(cart.getCategoryId())) {
+                            if (item != null && item.getUserId().equals(cart.getUserId()) && item.getCategoryId().equals(cart.getCategoryId()) && item.isProcessPurchase()) {
                                 if (!deletedOne) {
                                     itemSnapshot.getRef().removeValue();
                                     restoreProductStock(cart.getProductId(), quantityToRestore);
@@ -121,7 +184,7 @@ public class CartAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         int totalQuantityToRestore = 0;
                         for (DataSnapshot itemSnapshot : snapshot.getChildren()) {
                             Cart item = itemSnapshot.getValue(Cart.class);
-                            if (item != null && item.getProductId().equals(cart.getProductId()) && item.getCategoryId().equals(cart.getCategoryId())) {
+                            if (item != null && item.getProductId().equals(cart.getProductId()) && item.getCategoryId().equals(cart.getCategoryId()) && item.isProcessPurchase()) {
                                 totalQuantityToRestore += item.getQuantity();
                                 itemSnapshot.getRef().removeValue();
                             }
